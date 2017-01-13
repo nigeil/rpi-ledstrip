@@ -43,7 +43,7 @@ def set_pwm(r_duty, g_duty, b_duty):
 
 
 # MQTT state variables
-color0 = "#ffffff"
+color0 = ["#ffffff"]
 color1 = "#000000"
 fadeSetting = "no"
 
@@ -63,7 +63,7 @@ def on_message(client, userdata, msg):
           + ": " + str(msg.payload))
     if (msg.topic == topic_color0):
         print("[DEBUG] setting new color0 to " + (msg.payload).decode('utf-8'))
-        color0 = (msg.payload).decode('utf-8')
+        color0[0] = (msg.payload).decode('utf-8')
     if (msg.topic == topic_color1):
         print("[DEBUG] setting new color1 to " + (msg.payload).decode('utf-8'))
         color1 = (msg.payload).decode('utf-8')
@@ -104,12 +104,12 @@ client.loop_start()
 # Core color changing loop
 # TODO: Change to gracefulkiller for loop condition
 shouldRun = True
-currentColor = color0
+currentColor = color0[0]
 while (shouldRun == True):
-    colorToSet = determine_pwm(color0)
+    colorToSet = determine_pwm(color0[0])
     print("[DEBUG] new pwm: " + str(colorToSet))
     set_pwm(*colorToSet)
-    currentColor = color0 
+    currentColor = color0[0] 
     sleep(0.5)
 
 # --- END THE CLIENT ---
