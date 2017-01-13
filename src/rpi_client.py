@@ -62,11 +62,11 @@ def on_message(client, userdata, msg):
     print("[LOG] message from topic " + str(msg.topic)
           + ": " + str(msg.payload))
     if (msg.topic == topic_color0):
-        color0 = msg.payload
+        color0 = str(msg.payload)
     if (msg.topic == topic_color1):
-        color1 = msg.payload
+        color1 = str(msg.payload)
     if (msg.topic == topic_fadeSetting):
-        fadeSetting = msg.payload
+        fadeSetting = str(msg.payload)
     return 0
 
 
