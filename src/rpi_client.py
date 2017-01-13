@@ -108,6 +108,7 @@ currentColor = color0
 while (shouldRun == True):
     if (color0 != currentColor):
         colorToSet = determine_pwm(color0)
+        print("[DEBUG] new pwm: " + str(colorToSet))
         set_pwm(*colorToSet)
         currentColor = color0 
     sleep(0.5)
