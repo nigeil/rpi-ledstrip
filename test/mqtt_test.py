@@ -1,21 +1,7 @@
 #!/bin/python
-# Main client; interfaces to MQTT broker and rpi_gpio pins to power LED strip
 
-# Library imports
-import pigpio
 import paho.mqtt.client as mqtt
-
-# src code imports
-from determine_pwm import determine_pwm
-from fade import fade
-from gracefulkiller import GracefulKiller
-
-# Global defines - modify these to your liking
-
-## PWM pins; broadcom numbering
-RED_PIN   = 12
-GREEN_PIN = 18 
-BLUE_PIN  = 13
+import time 
 
 ## MQTT topic trees
 topic_color0 = "home/bedroom/ledstrip/color0"
@@ -29,17 +15,6 @@ MQTTport = 8883
 MQTTuser = "test"         # Set to None if no username/password
 MQTTpassword = "for test" # Set to None if no username/password
 MQTTcapath = "/etc/ssl/certs/ca-certificates.crt"
-
-
-# RPI Helper functions
-## Directly sets the PWM on the red, green, and blue pins
-## which are defined globally
-def set_pwm(r_duty, g_duty, b_duty):
-    pi.set_PWM_dutycycle(RED_PIN, r_duty)
-    pi.set_PWM_dutycycle(GREEN_PIN, g_duty)
-    pi.set_PWM_dutycycle(BLUE_PIN, b_duty)
-    return 0
-
 
 # MQTT state variables
 color0 = "#000000"
@@ -68,15 +43,6 @@ def on_message(client, userdata, msg):
         fadeSetting = msg.payload
     return 0
 
-
-# ---SET UP THE CLIENT---
-
-# RPI setup
-## Open up the RPI GPIO ports for writing, default to OFF (0,0,0)
-pi = pigpio.pi()
-set_pwm(0,0,0) 
-
-
 # MQTT setup
 ## Create the client
 client = mqtt.Client()
@@ -93,21 +59,6 @@ client.connect(MQTTserver, MQTTport)
 ## Start the client loop to check for messages in background thread
 client.loop_start()
 
-
-
-# --- START PICKING COLORS ---
-
-# Core color changing loop
-# TODO: Change to gracefulkiller for loop condition
-shouldRun = True
-currentColor = color0
-while (shouldRun == True):
-    if (color0 != currentColor):
-        colorToSet = determine_pwm(color0)
-        set_pwm(*colorToSet)
-        currentColor = color0 
-    sleep(0.5)
-
-# --- END THE CLIENT ---
-# TODO: exit gracefully
-exit()
+while True:
+    client.publish(topic_color0, "#000000", qos=2)
+    time.sleep(1)
