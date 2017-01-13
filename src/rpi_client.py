@@ -43,7 +43,7 @@ def set_pwm(r_duty, g_duty, b_duty):
 
 
 # MQTT state variables
-color0 = "#000000"
+color0 = "#ffffff"
 color1 = "#000000"
 fadeSetting = "no"
 
@@ -106,11 +106,10 @@ client.loop_start()
 shouldRun = True
 currentColor = color0
 while (shouldRun == True):
-    if (color0 != currentColor):
-        colorToSet = determine_pwm(color0)
-        print("[DEBUG] new pwm: " + str(colorToSet))
-        set_pwm(*colorToSet)
-        currentColor = color0 
+    colorToSet = determine_pwm(color0)
+    print("[DEBUG] new pwm: " + str(colorToSet))
+    set_pwm(*colorToSet)
+    currentColor = color0 
     sleep(0.5)
 
 # --- END THE CLIENT ---
