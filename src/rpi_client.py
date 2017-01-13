@@ -4,6 +4,7 @@
 # Library imports
 import pigpio
 import paho.mqtt.client as mqtt
+from time import sleep
 
 # src code imports
 from determine_pwm import determine_pwm
