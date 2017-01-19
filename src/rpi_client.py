@@ -116,7 +116,7 @@ subdivisions = 200
 fadeDelay = 0.5 # 2 colors/second
 while (shouldRun == True):
     # no fade - just use solid color0 
-    if (fadeSetting == "no"):
+    if (fadeSetting[0] == "no"):
         # set new PWM if there is a new color0; otherwise do nothing
         if (color0[0] != prevColor0):
             colorToSet = determine_pwm(color0[0])
@@ -127,7 +127,7 @@ while (shouldRun == True):
         sleep(0.25)
     
     # normal fade from color0 --> color1
-    if (fadeSetting == "fade"):
+    if (fadeSetting[0] == "fade"):
         # reset the fade if it is 1) just starting, 
         # or 2) has a new start/end color, otherwise proceed to next color
         if ((fadeCount == 0) 
