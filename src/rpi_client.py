@@ -43,9 +43,10 @@ def set_pwm(r_duty, g_duty, b_duty):
 
 
 # MQTT state variables
+## Placed in lists so that they can be accessed persistently
 color0 = ["#ffffff"]
-color1 = "#000000"
-fadeSetting = "no"
+color1 = ["#000000"]
+fadeSetting = ["no"]
 
 # MQTT helper functions
 ## What to do when a connection is established to the MQTT broker
@@ -66,10 +67,10 @@ def on_message(client, userdata, msg):
         color0[0] = (msg.payload).decode('utf-8')
     if (msg.topic == topic_color1):
         print("[DEBUG] setting new color1 to " + (msg.payload).decode('utf-8'))
-        color1 = (msg.payload).decode('utf-8')
+        color1[0] = (msg.payload).decode('utf-8')
     if (msg.topic == topic_fadeSetting):
         print("[DEBUG] setting new fadeSetting to " + (msg.payload).decode('utf-8'))
-        fadeSetting = (msg.payload).decode('utf-8')
+        fadeSetting[0] = (msg.payload).decode('utf-8')
     return 0
 
 
@@ -104,13 +105,49 @@ client.loop_start()
 # Core color changing loop
 # TODO: Change to gracefulkiller for loop condition
 shouldRun = True
+
 currentColor = color0[0]
+prevColor0 = color0[0]
+prevColor1 = color1[0]
+
+fadeColors = []
+fadeCount = 0
+subdivisions = 200
+fadeDelay = 0.5 # 2 colors/second
 while (shouldRun == True):
-    colorToSet = determine_pwm(color0[0])
-    print("[DEBUG] new pwm: " + str(colorToSet))
-    set_pwm(*colorToSet)
-    currentColor = color0[0] 
-    sleep(0.5)
+    # no fade - just use solid color0 
+    if (fadeSetting == "no"):
+        # set new PWM if there is a new color0; otherwise do nothing
+        if (color0[0] != prevColor0):
+            colorToSet = determine_pwm(color0[0])
+            currentColor = color0[0] 
+            prevColor0 = color0[0]
+            set_pwm(*colorToSet)
+            print("[DEBUG] new pwm: " + str(colorToSet))
+        sleep(0.25)
+    
+    # normal fade from color0 --> color1
+    if (fadeSetting == "fade"):
+        # reset the fade if it is 1) just starting, 
+        # or 2) has a new start/end color, otherwise proceed to next color
+        if ((fadeCount == 0) 
+         or (color0[0] != prevColor0) 
+         or (color1[0] != prevColor1)):
+            fadeColors = fade(color0[0], color1[0], subdivisions=subdivisions)
+            prevColor0 = color0[0]
+            prevColor1 = color1[0]
+            fadeCount  = 0
+        if (fadeCount >= 0 and fadeCount < subdivisions):
+            fadeIndex = fadeCount
+        elif (fadeCount >= subdivisions and fadeCount < 2 * subdivisions):
+            fadeIndex = -1 * ((fadeCount+1) % subdivisions)
+        colorToSet = determine_pwm(fadeColors[fadeIndex])
+        set_pwm(*colorToSet)
+        print("[DEBUG] new pwm: " + str(colorToSet))
+        fadeCount = (fadeCount + 1) % subdivisions
+        sleep(fadeDelay)
+    
+    
 
 # --- END THE CLIENT ---
 # TODO: exit gracefully
