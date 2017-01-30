@@ -1,0 +1,12 @@
+# sample systemd service file to autostart the rpi-ledstrip at boot
+[Unit]
+Description=The rpi-ledstrip (GPIO/MQTT) client
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/lightprincess/rpi-ledstrip/source/rpi_client.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
