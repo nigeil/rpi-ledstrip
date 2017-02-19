@@ -25,9 +25,15 @@ def fade(hexColor0, hexColor1, subdivisions=50):
         fadeColor = colors.rgb2hex(fadeColor)
         ret.append(fadeColor)
 
+    ret_rev = list(reversed(ret))
+    for i in range(0, len(ret_rev)):
+        ret.append(ret_rev[i])
+
     return ret
 
 if __name__ == "__main__":
     color0 = "#f4c842"
     color1 = "#c242f4"
-    print(fade(color0, color1))
+    fade_list = fade(color0, color1)
+    for i in range(0, len(fade_list)):
+        print("i = " + str(i) + " | color = " + str(fade_list[i]))

@@ -137,14 +137,14 @@ while (shouldRun == True):
             prevColor0 = color0[0]
             prevColor1 = color1[0]
             fadeCount  = 0
-        if (fadeCount >= 0 and fadeCount < subdivisions):
-            fadeIndex = fadeCount
-        elif (fadeCount >= subdivisions and fadeCount < 2 * subdivisions):
-            fadeIndex = -1 * ((fadeCount+1) % subdivisions)
-        colorToSet = determine_pwm(fadeColors[fadeIndex])
+        colorToSet = determine_pwm(fadeColors[fadeCount%subdivisions])
         set_pwm(*colorToSet)
         print("[DEBUG] new pwm: " + str(colorToSet))
-        fadeCount = (fadeCount + 1) % subdivisions
+        fadeCount = (fadeCount + 1)
+        # make sure that we don't have stupidly long integers taking up memory if
+        # this is running for days at a time
+        if(fadeCount > 1000 * subdivisions):
+            fadeCount = fadeCount % subdivisions
         sleep(fadeDelay)
     
     
