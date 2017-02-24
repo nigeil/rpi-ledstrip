@@ -123,7 +123,7 @@ while (shouldRun == True):
             currentColor = color0[0] 
             prevColor0 = color0[0]
             set_pwm(*colorToSet)
-            print("[DEBUG] new pwm: " + str(colorToSet))
+            #print("[DEBUG] new pwm: " + str(colorToSet))
         sleep(0.25)
     
     # normal fade from color0 --> color1
@@ -139,12 +139,8 @@ while (shouldRun == True):
             fadeCount  = 0
         colorToSet = determine_pwm(fadeColors[fadeCount%subdivisions])
         set_pwm(*colorToSet)
-        print("[DEBUG] new pwm: " + str(colorToSet))
+        #print("[DEBUG] new pwm: " + str(colorToSet))
         fadeCount = (fadeCount + 1)
-        # make sure that we don't have stupidly long integers taking up memory if
-        # this is running for days at a time
-        if(fadeCount > 1000 * subdivisions):
-            fadeCount = fadeCount % subdivisions
         sleep(fadeDelay)
     
     
