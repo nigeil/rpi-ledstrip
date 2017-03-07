@@ -6,6 +6,7 @@ import pigpio
 import paho.mqtt.client as mqtt
 from time import sleep
 import configparser as cp
+import os
 
 # src code imports
 from determine_pwm import determine_pwm
@@ -14,7 +15,7 @@ from gracefulkiller import GracefulKiller
 
 # Parse config file
 config = cp.ConfigParser()
-config.read("client_settings.conf")
+config.read(os.path.join(os.path.dirname(__file__), "client_settings.conf"))
 
 ## Get PWM pinouts
 RED_PIN   = int(config["PINOUT"]["RED_PIN"])
@@ -24,7 +25,7 @@ BLUE_PIN  = int(config["PINOUT"]["BLUE_PIN"])
 ## Get MQTT topic trees
 topic_color0      = config["TOPICS"]["topic_color0"]
 topic_color1      = config["TOPICS"]["topic_color1"]
-topic_fadesetting = config["TOPICS"]["topic_fadesetting"]
+topic_fadeSetting = config["TOPICS"]["topic_fadesetting"]
 TOPICS = [topic_color0, topic_color1, topic_fadeSetting]
 
 ## Get MQTT server settings
