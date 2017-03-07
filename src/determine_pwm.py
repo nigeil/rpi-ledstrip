@@ -10,6 +10,12 @@ def determine_pwm(hexColor):
     r_duty = int(r*255)
     g_duty = int(g*255)
     b_duty = int(b*255)
+
+    # Perform gamma correction
+    gamma = 2.1
+    r_duty *= int((r_duty/255.0) ** (gamma))
+    g_duty *= int((g_duty/255.0) ** (gamma))
+    b_duty *= int((b_duty/255.0) ** (gamma))
     
     # Force PWM duty cycle in range [0,255], in case something
     # malicious were to go on in the matplotlib conversion.

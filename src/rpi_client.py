@@ -5,31 +5,34 @@
 import pigpio
 import paho.mqtt.client as mqtt
 from time import sleep
+import configparser as cp
 
 # src code imports
 from determine_pwm import determine_pwm
 from fade import fade
 from gracefulkiller import GracefulKiller
 
-# Global defines - modify these to your liking
+# Parse config file
+config = cp.ConfigParser()
+config.read("client_settings.conf")
 
-## PWM pins; broadcom numbering
-RED_PIN   = 12
-GREEN_PIN = 18 
-BLUE_PIN  = 13
+## Get PWM pinouts
+RED_PIN   = int(config["PINOUT"]["RED_PIN"])
+GREEN_PIN = int(config["PINOUT"]["GREEN_PIN"])
+BLUE_PIN  = int(config["PINOUT"]["BLUE_PIN"])
 
-## MQTT topic trees
-topic_color0 = "home/bedroom/ledstrip/color0"
-topic_color1 = "home/bedroom/ledstrip/color1"
-topic_fadeSetting = "home/bedroom/ledstrip/fadeSetting"
+## Get MQTT topic trees
+topic_color0      = config["TOPICS"]["topic_color0"]
+topic_color1      = config["TOPICS"]["topic_color1"]
+topic_fadesetting = config["TOPICS"]["topic_fadesetting"]
 TOPICS = [topic_color0, topic_color1, topic_fadeSetting]
 
-## MQTT server settings
-MQTTserver = "thecloudkingdom.nigelmichki.ninja"
-MQTTport = 8883
-MQTTuser = "test"         # Set to None if no username/password
-MQTTpassword = "for test" # Set to None if no username/password
-MQTTcapath = "/etc/ssl/certs/ca-certificates.crt"
+## Get MQTT server settings
+MQTTserver = config["MQTT"]["MQTTserver"]
+MQTTport = config["MQTT"]["MQTTport"]
+MQTTuser = config["MQTT"]["MQTTuser"]
+MQTTpassword = config["MQTT"]["MQTTpassword"]
+MQTTcapath = config["MQTT"]["MQTTcapath"]
 
 
 # RPI Helper functions
@@ -116,7 +119,7 @@ subdivisions = 200
 fadeDelay = 0.5 # 2 colors/second
 while (shouldRun == True):
     # no fade - just use solid color0 
-    if (fadeSetting[0] == "no"):
+    if (fadeSetting[0] in ["no", "none", "solid"]):
         # set new PWM if there is a new color0; otherwise do nothing
         if (color0[0] != prevColor0):
             colorToSet = determine_pwm(color0[0])
