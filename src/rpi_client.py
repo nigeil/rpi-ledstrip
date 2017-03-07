@@ -30,7 +30,7 @@ TOPICS = [topic_color0, topic_color1, topic_fadeSetting]
 
 ## Get MQTT server settings
 MQTTserver = config["MQTT"]["MQTTserver"]
-MQTTport = config["MQTT"]["MQTTport"]
+MQTTport = int(config["MQTT"]["MQTTport"])
 MQTTuser = config["MQTT"]["MQTTuser"]
 MQTTpassword = config["MQTT"]["MQTTpassword"]
 MQTTcapath = config["MQTT"]["MQTTcapath"]
