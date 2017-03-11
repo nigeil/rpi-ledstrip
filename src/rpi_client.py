@@ -7,11 +7,16 @@ import paho.mqtt.client as mqtt
 from time import sleep
 import configparser as cp
 import os
+import time
 
 # src code imports
 from determine_pwm import determine_pwm
 from fade import fade
 from gracefulkiller import GracefulKiller
+
+# pause for a few seconds for systemd to get network interfaces up
+# (assuming you start this at boot - safely removed otherwise)
+time.sleep(10)
 
 # Parse config file
 config = cp.ConfigParser()
