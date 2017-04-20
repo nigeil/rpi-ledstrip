@@ -130,8 +130,8 @@ prevColor1 = color1[0]
 
 fadeColors = []
 fadeCount = 0
-subdivisions = 200
-fadeDelay = 0.5 # 2 colors/second
+subdivisions = 400
+fadeDelay = 0.25 # 4 colors/second
 while (shouldRun == True):
     # no fade - just use solid color0 
     if (fadeSetting[0] in ["no", "none", "solid"]):
