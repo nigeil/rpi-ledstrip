@@ -67,6 +67,14 @@ def on_connect(client, userdata, flags, rc):
     print("[LOG] Connected to broker with result code " + str(rc))
     return 0
 
+## What to do when a connection is lost (wait a bit, then reconnect)
+def on_disconnect(client, userdata, rc):
+    if rc != 0:
+        print("[LOG] Unexpected MQTT disconnection. Reconnect in 5s")
+        time.sleep(5)
+        client.reconnect()
+
+
 ## What to do when a message is recieved from any subscribed topic
 def on_message(client, userdata, msg):
     print("[LOG] message from topic " + str(msg.topic)
@@ -96,6 +104,7 @@ set_pwm(0,0,0)
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
+client.on_disconnect = on_disconnect
 client.tls_set(MQTTcapath)
 
 if ((MQTTuser is not None) and (MQTTpassword is not None)):
@@ -146,7 +155,7 @@ while (shouldRun == True):
             prevColor0 = color0[0]
             prevColor1 = color1[0]
             fadeCount  = 0
-        colorToSet = determine_pwm(fadeColors[fadeCount%subdivisions])
+        colorToSet = determine_pwm(fadeColors[fadeCount%len(fadeColors)])
         set_pwm(*colorToSet)
         #print("[DEBUG] new pwm: " + str(colorToSet))
         fadeCount = (fadeCount + 1)
