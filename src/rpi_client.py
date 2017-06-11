@@ -31,7 +31,8 @@ BLUE_PIN  = int(config["PINOUT"]["BLUE_PIN"])
 topic_color0      = config["TOPICS"]["topic_color0"]
 topic_color1      = config["TOPICS"]["topic_color1"]
 topic_fadeSetting = config["TOPICS"]["topic_fadesetting"]
-TOPICS = [topic_color0, topic_color1, topic_fadeSetting]
+topic_speed       = config["TOPICS"]["topic_speed"]
+TOPICS = [topic_color0, topic_color1, topic_fadeSetting, topic_speed]
 
 ## Get MQTT server settings
 MQTTserver = config["MQTT"]["MQTTserver"]
@@ -55,7 +56,8 @@ def set_pwm(r_duty, g_duty, b_duty):
 ## Placed in lists so that they can be accessed persistently
 color0 = ["#ffffff"]
 color1 = ["#000000"]
-fadeSetting = ["no"]
+fadeSetting = ["solid"]
+speed = [0] # range from [0,60] Hz 
 
 # MQTT helper functions
 ## What to do when a connection is established to the MQTT broker
@@ -88,6 +90,13 @@ def on_message(client, userdata, msg):
     if (msg.topic == topic_fadeSetting):
         print("[DEBUG] setting new fadeSetting to " + (msg.payload).decode('utf-8'))
         fadeSetting[0] = (msg.payload).decode('utf-8')
+    if (msg.topic == topic_speed):
+        print("[DEBUG] setting new speed to " + (msg.payload).decode('utf-8'))
+        try:
+            speed[0] = int((msg.payload).decode('utf-8'))
+        except ValueError:
+            print("[ERROR] speed cannot be converted to integer - set to 30fps")
+            speed[0] = 30
     return 0
 
 
@@ -131,10 +140,11 @@ prevColor1 = color1[0]
 fadeColors = []
 fadeCount = 0
 subdivisions = 400
-fadeDelay = 0.25 # 4 colors/second
+fadeDelay = 1.0/(1 + speed[0])
+
 while (shouldRun == True):
     # no fade - just use solid color0 
-    if (fadeSetting[0] in ["no", "none", "solid"]):
+    if (fadeSetting[0] == "solid"):
         # set new PWM if there is a new color0; otherwise do nothing
         if (color0[0] != prevColor0):
             colorToSet = determine_pwm(color0[0])
@@ -145,7 +155,7 @@ while (shouldRun == True):
         sleep(0.25)
     
     # normal fade from color0 --> color1
-    if (fadeSetting[0] == "fade"):
+    elif (fadeSetting[0] == "fade"):
         # reset the fade if it is 1) just starting, 
         # or 2) has a new start/end color, otherwise proceed to next color
         if ((fadeCount == 0) 
@@ -160,6 +170,18 @@ while (shouldRun == True):
         #print("[DEBUG] new pwm: " + str(colorToSet))
         fadeCount = (fadeCount + 1)
         sleep(fadeDelay)
+    
+    # strobe light between color0 and black
+    elif (fadeSetting[0] == "strobe"):
+        if (fadeCount == 0):
+            color_to_set = determine_pwm(color0[0])
+        elif (fadeCount == 1):
+            color_to_set = determine_pwm("#000000")
+        set_pwm(*colorToSet)
+        fadeCount = (fadeCount + 1) % 2
+        sleep(fadeDelay)
+
+    
     
     
 
