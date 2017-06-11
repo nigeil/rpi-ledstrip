@@ -140,9 +140,12 @@ prevColor1 = color1[0]
 fadeColors = []
 fadeCount = 0
 subdivisions = 400
-fadeDelay = 1.0/(1 + speed[0])
 
 while (shouldRun == True):
+
+    # update fade delay in case new speed was set
+    fadeDelay = 1.0/(1 + speed[0])
+
     # no fade - just use solid color0 
     if (fadeSetting[0] == "solid"):
         # set new PWM if there is a new color0; otherwise do nothing
@@ -174,9 +177,9 @@ while (shouldRun == True):
     # strobe light between color0 and black
     elif (fadeSetting[0] == "strobe"):
         if (fadeCount == 0):
-            color_to_set = determine_pwm(color0[0])
+            colorToSet = determine_pwm(color0[0])
         elif (fadeCount == 1):
-            color_to_set = determine_pwm("#000000")
+            colorToSet = determine_pwm("#000000")
         set_pwm(*colorToSet)
         fadeCount = (fadeCount + 1) % 2
         sleep(fadeDelay)
