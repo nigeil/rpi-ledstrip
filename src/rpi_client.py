@@ -187,7 +187,8 @@ while (shouldRun == True):
     # turn off the strip
     elif (fadeSetting[0] == "off"):
         colorToSet = determine_pwm("#000000")
-        set_pwm(colorToSet)
+        set_pwm(*colorToSet)
+        sleep(0.25)
 
 
 # --- END THE CLIENT ---
