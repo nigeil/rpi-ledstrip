@@ -37,3 +37,4 @@ if __name__ == "__main__":
     fade_list = fade(color0, color1)
     for i in range(0, len(fade_list)):
         print("i = " + str(i) + " | color = " + str(fade_list[i]))
+    print("First color == last color : " + str(fade_list[0] == fade_list[-1]))
