@@ -153,7 +153,7 @@ while (shouldRun == True):
             fadeColors = fade_monochrome(intensity[0], int(float(intensity[0]) / 3), subdivisions=subdivisions)
             prevIntensity = intensity[0]
             fadeCount  = 0
-        colorToSet = determine_pwm(fadeColors[fadeCount%len(fadeColors)])
+        colorToSet = determine_monochrome_pwm(fadeColors[fadeCount%len(fadeColors)])
         set_pwm(*colorToSet)
         #print("[DEBUG] new pwm: " + str(colorToSet))
         fadeCount = (fadeCount + 1)
