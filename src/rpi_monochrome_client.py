@@ -137,7 +137,7 @@ while (shouldRun == True):
     # no fade - just use solid color0 
     if (fadeSetting[0] == "solid"):
         # set new PWM if there is a new color0; otherwise do nothing
-        if (intensity[0] != prevIntensity0):
+        if (intensity[0] != prevIntensity):
             colorToSet = determine_monochrome_pwm(intensity[0])
             prevIntensity = intensity[0] 
             set_pwm(*colorToSet)
@@ -162,16 +162,16 @@ while (shouldRun == True):
     # strobe light between color0 and black
     elif (fadeSetting[0] == "strobe"):
         if (fadeCount == 0):
-            colorToSet = determine_intensity_pwm(intensity[0])
+            colorToSet = determine_monochrome_pwm(intensity[0])
         elif (fadeCount == 1):
-            colorToSet = determine_intensity_pwm(0)
+            colorToSet = determine_monochrome_pwm(0)
         set_pwm(*colorToSet)
         fadeCount = (fadeCount + 1) % 2
         sleep(fadeDelay)
     
     # turn off the strip
     elif (fadeSetting[0] == "off"):
-        colorToSet = determine_intensity_pwm(0)
+        colorToSet = determine_monochrome_pwm(0)
         set_pwm(*colorToSet)
         sleep(0.25)
 
