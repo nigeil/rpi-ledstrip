@@ -52,6 +52,7 @@ def set_pwm(led_duty):
 intensity = [100] # %, 0 is off
 fadeSetting = ["solid"]
 speed = [0] # range from [0,60] Hz 
+connected = False # True if connected to broker, false otherwise
 
 # MQTT helper functions
 ## What to do when a connection is established to the MQTT broker
@@ -61,23 +62,27 @@ def on_connect(client, userdata, flags, rc):
         client.subscribe(topic, qos=2)
 
     print("[LOG] Connected to broker with result code " + str(rc))
+    connected = True
     return 0
 
 ## What to do when a connection is lost (wait a bit, then reconnect)
 def on_disconnect(client, userdata, rc):
     if rc != 0:
+        connected = False
         print("[LOG] Unexpected MQTT disconnection. Reconnect in 5s")
         time.sleep(5)
-        client.reconnect()
+        while (connected == False):
+            client.reconnect()
+    return 0
 
 
 ## What to do when a message is recieved from any subscribed topic
 def on_message(client, userdata, msg):
     print("[LOG] message from topic " + str(msg.topic)
           + ": " + str(msg.payload))
-    if (msg.topic == intensity):
+    if (msg.topic == topic_intensity):
         print("[DEBUG] setting new intensity to " + (msg.payload).decode('utf-8'))
-        intensity[0] = (msg.payload).decode('utf-8')
+        intensity[0] = int((msg.payload).decode('utf-8'))
     if (msg.topic == topic_fadeSetting):
         print("[DEBUG] setting new fadeSetting to " + (msg.payload).decode('utf-8'))
         fadeSetting[0] = (msg.payload).decode('utf-8')

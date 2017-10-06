@@ -58,6 +58,7 @@ color0 = ["#ffffff"]
 color1 = ["#000000"]
 fadeSetting = ["solid"]
 speed = [0] # range from [0,60] Hz 
+connected = False # True if connected successfully, false otherwise
 
 # MQTT helper functions
 ## What to do when a connection is established to the MQTT broker
@@ -67,14 +68,18 @@ def on_connect(client, userdata, flags, rc):
         client.subscribe(topic, qos=2)
 
     print("[LOG] Connected to broker with result code " + str(rc))
+    connected = True
     return 0
 
 ## What to do when a connection is lost (wait a bit, then reconnect)
 def on_disconnect(client, userdata, rc):
     if rc != 0:
+        connected = False
         print("[LOG] Unexpected MQTT disconnection. Reconnect in 5s")
         time.sleep(5)
-        client.reconnect()
+        while (connected == False):
+            client.reconnect()
+    return 0
 
 
 ## What to do when a message is recieved from any subscribed topic
