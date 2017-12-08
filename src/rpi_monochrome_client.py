@@ -14,10 +14,6 @@ from determine_monochrome_pwm import determine_monochrome_pwm
 from fade_monochrome import fade_monochrome
 from gracefulkiller import GracefulKiller
 
-# pause for a few seconds for systemd to get network interfaces up
-# (assuming you start this at boot - safely removed otherwise)
-time.sleep(10)
-
 # Parse config file
 config = cp.ConfigParser()
 config.read(os.path.join(os.path.dirname(__file__), "client_settings.conf"))
@@ -70,8 +66,8 @@ def on_disconnect(client, userdata, rc):
     if rc != 0:
         connected = False
         print("[LOG] Unexpected MQTT disconnection. Reconnect in 5s")
-        time.sleep(5)
         while (connected == False):
+            time.sleep(5)
             client.reconnect()
     return 0
 
