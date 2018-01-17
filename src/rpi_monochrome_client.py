@@ -2,12 +2,16 @@
 # Main client; interfaces to MQTT broker and rpi_gpio pins to power LED strip
 
 # Library imports
-import pigpio
 import paho.mqtt.client as mqtt
 from time import sleep
 import configparser as cp
 import os
 import time
+
+try:
+    import pigpio
+except ImportError:
+    import dummy_rpi_gpio as pigpio
 
 # src code imports
 from determine_monochrome_pwm import determine_monochrome_pwm
@@ -97,7 +101,7 @@ def on_message(client, userdata, msg):
 # RPI setup
 ## Open up the RPI GPIO ports for writing, default to OFF (0,0,0)
 pi = pigpio.pi()
-set_pwm(0) 
+#set_pwm(0) 
 
 
 # MQTT setup
