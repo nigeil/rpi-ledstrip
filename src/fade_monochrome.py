@@ -1,7 +1,7 @@
 #!/bin/python
 # Returns a fade between the given intensity level and 1/3 its value
 
-def fade_monochrome(intensity_start, intensity_end, subdivisions=50):
+def fade_monochrome(intensity_start, intensity_end, subdivisions=150):
     ret = [i for i in range(intensity_start, intensity_end, -1)]
 
     ret_rev = list(reversed(ret))

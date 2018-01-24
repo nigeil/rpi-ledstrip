@@ -72,7 +72,12 @@ def on_disconnect(client, userdata, rc):
         print("[LOG] Unexpected MQTT disconnection. Reconnect in 5s")
         while (connected == False):
             time.sleep(5)
-            client.reconnect()
+            try:
+                client.reconnect()
+            except Exception:
+                print("[ERROR] client unable to connect (exception thrown); trying again in 5s...")
+                time.sleep(5)
+                continue
     return 0
 
 
@@ -116,7 +121,14 @@ if ((MQTTuser is not None) and (MQTTpassword is not None)):
     client.username_pw_set(MQTTuser, MQTTpassword)
 
 ### Call the connection function last
-client.connect(MQTTserver, MQTTport)
+connected = False
+while (connected == False):
+    try:
+        client.connect(MQTTserver, MQTTport)
+        connected = True
+    except Exception:
+        print("[ERROR] client unable to connect (exception thrown); trying again in 5s...")
+        time.sleep(5)
 
 ## Start the client loop to check for messages in background thread
 client.loop_start()
