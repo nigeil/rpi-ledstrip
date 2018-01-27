@@ -78,7 +78,13 @@ def on_disconnect(client, userdata, rc):
         print("[LOG] Unexpected MQTT disconnection. Reconnect in 5s")
         while (connected == False):
             time.sleep(5)
-            client.reconnect()
+            try:
+                client.reconnect()
+                connected = True
+                print("[LOG] Connected to broker with result code " + str(rc))
+            except Exception:
+                print("[ERROR] client unable to connect (exception thrown); trying again in 5s...")
+                time.sleep(5)
     return 0
 
 
