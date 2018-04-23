@@ -89,16 +89,16 @@ def on_message(client, userdata, msg):
     print("[LOG] message from topic " + str(msg.topic)
           + ": " + str(msg.payload))
     if (msg.topic == topic_state):
-        print("[DEBUG] setting new state to " + (msg.payload).decode('utf-8'))
-        state[0] = int((msg.payload).decode('utf-8'))
+        #print("[DEBUG] setting new state to " + (msg.payload).decode('utf-8'))
+        state[0] = (msg.payload).decode('utf-8')
     if (msg.topic == topic_intensity):
-        print("[DEBUG] setting new intensity to " + (msg.payload).decode('utf-8'))
+        #print("[DEBUG] setting new intensity to " + (msg.payload).decode('utf-8'))
         intensity[0] = int((msg.payload).decode('utf-8'))
     if (msg.topic == topic_fadeSetting):
-        print("[DEBUG] setting new fadeSetting to " + (msg.payload).decode('utf-8'))
+        #print("[DEBUG] setting new fadeSetting to " + (msg.payload).decode('utf-8'))
         fadeSetting[0] = (msg.payload).decode('utf-8')
     if (msg.topic == topic_speed):
-        print("[DEBUG] setting new speed to " + (msg.payload).decode('utf-8'))
+        #print("[DEBUG] setting new speed to " + (msg.payload).decode('utf-8'))
         try:
             speed[0] = int((msg.payload).decode('utf-8'))
         except ValueError:
