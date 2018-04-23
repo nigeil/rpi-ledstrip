@@ -26,10 +26,11 @@ config.read(os.path.join(os.path.dirname(__file__), "client_settings.conf"))
 LED_PIN   = int(config["PINOUT"]["LED_PIN"])
 
 ## Get MQTT topic trees
+topic_state = config["TOPICS"]["topic_state"]
 topic_intensity = config["TOPICS"]["topic_intensity"]
 topic_fadeSetting = config["TOPICS"]["topic_fadesetting"]
 topic_speed       = config["TOPICS"]["topic_speed"]
-TOPICS = [topic_intensity, topic_fadeSetting, topic_speed]
+TOPICS = [topic_state, topic_intensity, topic_fadeSetting, topic_speed]
 
 ## Get MQTT server settings
 MQTTserver = config["MQTT"]["MQTTserver"]
@@ -51,6 +52,7 @@ def set_pwm(led_duty):
 ## Placed in lists so that they can be accessed persistently
 intensity = [100] # %, 0 is off
 fadeSetting = ["solid"]
+state = ["off"]
 speed = [0] # range from [0,60] Hz 
 connected = False # True if connected to broker, false otherwise
 
@@ -86,6 +88,9 @@ def on_disconnect(client, userdata, rc):
 def on_message(client, userdata, msg):
     print("[LOG] message from topic " + str(msg.topic)
           + ": " + str(msg.payload))
+    if (msg.topic == topic_state):
+        print("[DEBUG] setting new state to " + (msg.payload).decode('utf-8'))
+        state[0] = int((msg.payload).decode('utf-8'))
     if (msg.topic == topic_intensity):
         print("[DEBUG] setting new intensity to " + (msg.payload).decode('utf-8'))
         intensity[0] = int((msg.payload).decode('utf-8'))
@@ -151,6 +156,13 @@ while (shouldRun == True):
 
     # update fade delay in case new speed was set
     fadeDelay = 1.0/(1 + speed[0])
+
+    # if we're off, don't do anything
+    if (state[0] == "off"):
+        colorToSet = determine_monochrome_pwm(0)
+        set_pwm(*colorToSet)
+        sleep(0.25)
+        continue
 
     # no fade - just use solid color0 
     if (fadeSetting[0] == "solid"):
