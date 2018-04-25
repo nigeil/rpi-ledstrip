@@ -8,9 +8,23 @@ class pi():
 
     def set_PWM_dutycycle(self, pin_number, duty_cycle):
         return 0
+
+    def set_servo(self, pin_number, duty_cycle):
+    	return 0
     
     def __init__(self):
         self.state ='dummy_initialized'
+
+class Servo():
+	def set_PWM_dutycycle(self, pin_number, duty_cycle):
+		return 0
+
+	def set_servo(self, pin_number, duty_cycle):
+		return 0
+
+	def __init__(self):
+		self.state ='dummy_initialized'
+
 
 if __name__ == "__main__":
     my_pi = pi()

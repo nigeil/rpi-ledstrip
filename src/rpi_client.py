@@ -7,32 +7,48 @@ from time import sleep
 import configparser as cp
 import os
 import time
+import threading
 
 try:
-    import pigpio
+    from RPI import PWM
 except ImportError:
-    import dummy_rpi_gpio as pigpio
+    import dummy_rpi_gpio as PWM
 
 # src code imports
 from determine_pwm import determine_pwm
 from fade import fade
-from gracefulkiller import GracefulKiller
+from determine_monochrome_pwm import determine_monochrome_pwm
+from fade_monochrome import fade_monochrome
 
-# Parse config file
+# --- Parse config file ---
 config = cp.ConfigParser()
 config.read(os.path.join(os.path.dirname(__file__), "client_settings.conf"))
 
-## Get PWM pinouts
-RED_PIN   = int(config["PINOUT"]["RED_PIN"])
-GREEN_PIN = int(config["PINOUT"]["GREEN_PIN"])
-BLUE_PIN  = int(config["PINOUT"]["BLUE_PIN"])
+# Get type of ledstrip (RGB or monochrome)
+ledstrip_type = config["SYSTEM"]["ledstrip_type"]
+if (ledstrip_type not in ["rgb", "monochrome"]):
+    print("[ERROR] ledstrip type not recognized; use \'rgb\' or \'monochrome\' in config file")
+    exit()
 
-## Get MQTT topic trees
-topic_color0      = config["TOPICS"]["topic_color0"]
-topic_color1      = config["TOPICS"]["topic_color1"]
+## Get the rest of the MQTT topic trees
 topic_fadeSetting = config["TOPICS"]["topic_fadesetting"]
 topic_speed       = config["TOPICS"]["topic_speed"]
-TOPICS = [topic_color0, topic_color1, topic_fadeSetting, topic_speed]
+topic_state       = config["TOPICS"]["topic_state"]
+
+## Get PWM pinouts and color topics
+if (ledstrip_type == "rgb"):
+    RED_PIN      = int(config["PINOUT"]["RED_PIN"])
+    GREEN_PIN    = int(config["PINOUT"]["GREEN_PIN"])
+    BLUE_PIN     = int(config["PINOUT"]["BLUE_PIN"])
+    topic_color0 = config["TOPICS"]["topic_color0"]
+    topic_color1 = config["TOPICS"]["topic_color1"]
+    TOPICS = [topic_color0, topic_color1, topic_fadeSetting, topic_speed, topic_state]
+
+elif (ledstrip_type == "monochrome"):
+    LED_PIN         = int(config["PINOUT"]["LED_PIN"])
+    topic_intensity = config["TOPICS"]["topic_intensity"]
+    TOPICS = [topic_intensity, topic_fadeSetting, topic_speed, topic_state]
+
 
 ## Get MQTT server settings
 MQTTserver = config["MQTT"]["MQTTserver"]
@@ -45,15 +61,20 @@ MQTTcapath = config["MQTT"]["MQTTcapath"]
 # RPI Helper functions
 ## Directly sets the PWM on the red, green, and blue pins
 ## which are defined globally
-def set_pwm(r_duty, g_duty, b_duty):
-    pi.set_PWM_dutycycle(RED_PIN, r_duty)
-    pi.set_PWM_dutycycle(GREEN_PIN, g_duty)
-    pi.set_PWM_dutycycle(BLUE_PIN, b_duty)
-    return 0
+if (ledstrip_type == "rgb"):
+    def set_pwm(r_duty, g_duty, b_duty):
+        pi.set_servo(RED_PIN, r_duty)
+        pi.set_servo(GREEN_PIN, g_duty)
+        pi.set_servo(BLUE_PIN, b_duty)
+elif (ledstrip_type == "monochrome"):
+    def set_pwm(led_duty):
+        pi.set_servo(LED_PIN, led_duty)
+        return 0
 
 
 # MQTT state variables
 ## Placed in lists so that they can be accessed persistently
+state  = ["off"]
 color0 = ["#ffffff"]
 color1 = ["#000000"]
 fadeSetting = ["solid"]
@@ -75,16 +96,16 @@ def on_connect(client, userdata, flags, rc):
 def on_disconnect(client, userdata, rc):
     if rc != 0:
         connected = False
-        print("[LOG] Unexpected MQTT disconnection. Reconnect in 5s")
+        print("[LOG] Unexpected MQTT disconnection. Reconnect in 1s")
         while (connected == False):
-            time.sleep(5)
+            time.sleep(1)
             try:
                 client.reconnect()
                 connected = True
                 print("[LOG] Connected to broker with result code " + str(rc))
             except Exception:
-                print("[ERROR] client unable to connect (exception thrown); trying again in 5s...")
-                time.sleep(5)
+                print("[ERROR] client unable to connect (exception thrown); trying again in 1s...")
+                time.sleep(1)
     return 0
 
 
@@ -92,17 +113,25 @@ def on_disconnect(client, userdata, rc):
 def on_message(client, userdata, msg):
     print("[LOG] message from topic " + str(msg.topic)
           + ": " + str(msg.payload))
-    if (msg.topic == topic_color0):
-        print("[DEBUG] setting new color0 to " + (msg.payload).decode('utf-8'))
-        color0[0] = (msg.payload).decode('utf-8')
-    if (msg.topic == topic_color1):
-        print("[DEBUG] setting new color1 to " + (msg.payload).decode('utf-8'))
-        color1[0] = (msg.payload).decode('utf-8')
+    if (ledstrip_type == "rgb"):
+        if   (msg.topic == topic_color0):
+            #print("[DEBUG] setting new color0 to " + (msg.payload).decode('utf-8'))
+            color0[0] = (msg.payload).decode('utf-8')
+        if (msg.topic == topic_color1):
+            #print("[DEBUG] setting new color1 to " + (msg.payload).decode('utf-8'))
+            color1[0] = (msg.payload).decode('utf-8')
+    elif (ledstrip_type == "monochrome"):
+        if (msg.topic == topic_intensity):
+            #print("[DEBUG] setting new intensity to " + (msg.payload).decode('utf-8'))
+            intensity[0] = int((msg.payload).decode('utf-8'))
     if (msg.topic == topic_fadeSetting):
-        print("[DEBUG] setting new fadeSetting to " + (msg.payload).decode('utf-8'))
+        #print("[DEBUG] setting new fadeSetting to " + (msg.payload).decode('utf-8'))
         fadeSetting[0] = (msg.payload).decode('utf-8')
+    if (msg.topic == topic_state):
+        #print("[DEBUG] setting new fadeSetting to " + (msg.payload).decode('utf-8'))
+        state[0] = (msg.payload).decode('utf-8')
     if (msg.topic == topic_speed):
-        print("[DEBUG] setting new speed to " + (msg.payload).decode('utf-8'))
+        #print("[DEBUG] setting new speed to " + (msg.payload).decode('utf-8'))
         try:
             speed[0] = int((msg.payload).decode('utf-8'))
         except ValueError:
@@ -115,7 +144,7 @@ def on_message(client, userdata, msg):
 
 # RPI setup
 ## Open up the RPI GPIO ports for writing, default to OFF (0,0,0)
-pi = pigpio.pi()
+pi = PWM.Servo()
 #set_pwm(0,0,0) 
 
 
@@ -147,60 +176,92 @@ shouldRun = True
 currentColor = color0[0]
 prevColor0 = color0[0]
 prevColor1 = color1[0]
+prevIntensity = 0
 
 fadeColors = []
 fadeCount = 0
 subdivisions = 400
 
-while (shouldRun == True):
+def animation_handler():
+    while (shouldRun == True):
+        if (state[0] in ["off", "OFF", "Off", "0"]):
+            if (ledstrip_type == "rgb"):
+                colorToSet = determine_pwm("#000000")
+                set_pwm(*colorToSet)
+            elif (ledstrip_type == "monochrome"):
+                colorToSet = determine_monochrome_pwm(0)
+                set_pwm(*colorToSet)
+            sleep(0.25)
 
-    # update fade delay in case new speed was set
-    fadeDelay = 1.0/(1 + speed[0])
+        elif (state[0] in ["on", "ON", "On", "1"]):
+            # update fade delay in case new speed was set
+            fadeDelay = 1.0/(1 + speed[0])
 
-    # no fade - just use solid color0 
-    if (fadeSetting[0] == "solid"):
-        # set new PWM if there is a new color0; otherwise do nothing
-        if (color0[0] != prevColor0):
-            colorToSet = determine_pwm(color0[0])
-            currentColor = color0[0] 
-            prevColor0 = color0[0]
-            set_pwm(*colorToSet)
-            #print("[DEBUG] new pwm: " + str(colorToSet))
-        sleep(0.25)
-    
-    # normal fade from color0 --> color1
-    elif (fadeSetting[0] == "fade"):
-        # reset the fade if it is 1) just starting, 
-        # or 2) has a new start/end color, otherwise proceed to next color
-        if ((fadeCount == 0) 
-         or (color0[0] != prevColor0) 
-         or (color1[0] != prevColor1)):
-            fadeColors = fade(color0[0], color1[0], subdivisions=subdivisions)
-            prevColor0 = color0[0]
-            prevColor1 = color1[0]
-            fadeCount  = 0
-        colorToSet = determine_pwm(fadeColors[fadeCount%len(fadeColors)])
-        set_pwm(*colorToSet)
-        #print("[DEBUG] new pwm: " + str(colorToSet))
-        fadeCount = (fadeCount + 1)
-        sleep(fadeDelay)
-    
-    # strobe light between color0 and black
-    elif (fadeSetting[0] == "strobe"):
-        if (fadeCount == 0):
-            colorToSet = determine_pwm(color0[0])
-        elif (fadeCount == 1):
-            colorToSet = determine_pwm("#000000")
-        set_pwm(*colorToSet)
-        fadeCount = (fadeCount + 1) % 2
-        sleep(fadeDelay)
-    
-    # turn off the strip
-    elif (fadeSetting[0] == "off"):
-        colorToSet = determine_pwm("#000000")
-        set_pwm(*colorToSet)
-        sleep(0.25)
+            # no fade - just use solid color 
+            if (fadeSetting[0] == "solid"):
+                if (ledstrip_type == "rgb"):
+                    # set new PWM if there is a new color0; otherwise do nothing
+                    if (color0[0] != prevColor0):
+                        colorToSet = determine_pwm(color0[0])
+                        currentColor = color0[0] 
+                        prevColor0 = color0[0]
+                        set_pwm(*colorToSet)
+                        #print("[DEBUG] new pwm: " + str(colorToSet))
+                elif (ledstrip_type == "monochrome"):
+                    if (intensity[0] != prevIntensity):
+                        colorToSet = determine_monochrome_pwm(intensity[0])
+                        prevIntensity = intensity[0] 
+                        set_pwm(*colorToSet)
+                sleep(0.25)
+            
+            # normal fade from color0 --> color1
+            elif (fadeSetting[0] == "fade"):
+                if (ledstrip_type == "rgb"):
+                    # reset the fade if it is 1) just starting, 
+                    # or 2) has a new start/end color, otherwise proceed to next color
+                    if ((fadeCount == 0) 
+                     or (color0[0] != prevColor0) 
+                     or (color1[0] != prevColor1)):
+                        fadeColors = fade(color0[0], color1[0], subdivisions=subdivisions)
+                        prevColor0 = color0[0]
+                        prevColor1 = color1[0]
+                        fadeCount  = 0
+                    colorToSet = determine_pwm(fadeColors[fadeCount%len(fadeColors)])
+                    set_pwm(*colorToSet)
+                    #print("[DEBUG] new pwm: " + str(colorToSet))
+                    fadeCount = (fadeCount + 1)
+                elif (ledstrip_type == "monochrome"):
+                    if ((fadeCount == 0) 
+                    or (intensity[0] != prevIntensity)):
+                        fadeColors = fade_monochrome(intensity[0], int(float(intensity[0]) / 3), subdivisions=subdivisions)
+                        prevIntensity = intensity[0]
+                        fadeCount  = 0
+                        colorToSet = determine_monochrome_pwm(fadeColors[fadeCount%len(fadeColors)])
+                        set_pwm(*colorToSet)
+                        #print("[DEBUG] new pwm: " + str(colorToSet))
+                        fadeCount = (fadeCount + 1)
+                sleep(fadeDelay)
+            
+            # strobe light between color0 and black
+            elif (fadeSetting[0] == "strobe"):
+                if (ledstrip_type == "rgb"):
+                    if (fadeCount == 0):
+                        colorToSet = determine_pwm(color0[0])
+                    elif (fadeCount == 1):
+                        colorToSet = determine_pwm("#000000")
+                    set_pwm(*colorToSet)
+                    fadeCount = (fadeCount + 1) % 2
+                elif (ledstrip_type == "monochrome"):
+                    if (fadeCount == 0):
+                        colorToSet = determine_monochrome_pwm(intensity[0])
+                    elif (fadeCount == 1):
+                        colorToSet = determine_monochrome_pwm(0)
+                    set_pwm(*colorToSet)
+                    fadeCount = (fadeCount + 1) % 2
+                sleep(fadeDelay)
 
+animation_thread = threading.Thread(target=animation_handler)
+animation_thread.start()
 
 # --- END THE CLIENT ---
 # TODO: exit gracefully
