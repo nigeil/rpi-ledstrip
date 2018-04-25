@@ -173,13 +173,13 @@ client.loop_start()
 # TODO: Change to gracefulkiller for loop condition
 shouldRun = True
 
-currentColor = color0[0]
-prevColor0 = color0[0]
-prevColor1 = color1[0]
-prevIntensity = 0
+currentColor = [color0[0]]
+prevColor0 = [color0[0]]
+prevColor1 = [color1[0]]
+prevIntensity = [0]
 
 fadeColors = []
-fadeCount = 0
+fadeCount = [0]
 subdivisions = 400
 
 def animation_handler():
@@ -201,16 +201,16 @@ def animation_handler():
             if (fadeSetting[0] == "solid"):
                 if (ledstrip_type == "rgb"):
                     # set new PWM if there is a new color0; otherwise do nothing
-                    if (color0[0] != prevColor0):
+                    if (color0[0] != prevColor0[0]):
                         colorToSet = determine_pwm(color0[0])
-                        currentColor = color0[0] 
-                        prevColor0 = color0[0]
+                        currentColor[0] = color0[0] 
+                        prevColor0[0] = color0[0]
                         set_pwm(*colorToSet)
                         #print("[DEBUG] new pwm: " + str(colorToSet))
                 elif (ledstrip_type == "monochrome"):
-                    if (intensity[0] != prevIntensity):
-                        colorToSet = determine_monochrome_pwm(intensity[0])
-                        prevIntensity = intensity[0] 
+                    if (intensity[0] != prevIntensity[0]):
+                        colorToSet[0] = determine_monochrome_pwm(intensity[0])
+                        prevIntensity[0] = intensity[0] 
                         set_pwm(*colorToSet)
                 sleep(0.25)
             
@@ -219,45 +219,45 @@ def animation_handler():
                 if (ledstrip_type == "rgb"):
                     # reset the fade if it is 1) just starting, 
                     # or 2) has a new start/end color, otherwise proceed to next color
-                    if ((fadeCount == 0) 
-                     or (color0[0] != prevColor0) 
-                     or (color1[0] != prevColor1)):
+                    if ((fadeCount[0] == 0) 
+                     or (color0[0] != prevColor0[0]) 
+                     or (color1[0] != prevColor1[0])):
                         fadeColors = fade(color0[0], color1[0], subdivisions=subdivisions)
-                        prevColor0 = color0[0]
-                        prevColor1 = color1[0]
-                        fadeCount  = 0
-                    colorToSet = determine_pwm(fadeColors[fadeCount%len(fadeColors)])
+                        prevColor0[0] = color0[0]
+                        prevColor1[0] = color1[0]
+                        fadeCount[0]  = 0
+                    colorToSet = determine_pwm(fadeColors[fadeCount[0]%len(fadeColors)])
                     set_pwm(*colorToSet)
                     #print("[DEBUG] new pwm: " + str(colorToSet))
-                    fadeCount = (fadeCount + 1)
+                    fadeCount[0] = (fadeCount[0] + 1)
                 elif (ledstrip_type == "monochrome"):
-                    if ((fadeCount == 0) 
+                    if ((fadeCount[0] == 0) 
                     or (intensity[0] != prevIntensity)):
                         fadeColors = fade_monochrome(intensity[0], int(float(intensity[0]) / 3), subdivisions=subdivisions)
-                        prevIntensity = intensity[0]
-                        fadeCount  = 0
-                        colorToSet = determine_monochrome_pwm(fadeColors[fadeCount%len(fadeColors)])
+                        prevIntensity[0] = intensity[0]
+                        fadeCount[0]  = 0
+                        colorToSet = determine_monochrome_pwm(fadeColors[fadeCount[0]%len(fadeColors)])
                         set_pwm(*colorToSet)
                         #print("[DEBUG] new pwm: " + str(colorToSet))
-                        fadeCount = (fadeCount + 1)
+                        fadeCount[0] = (fadeCount[0] + 1)
                 sleep(fadeDelay)
             
             # strobe light between color0 and black
             elif (fadeSetting[0] == "strobe"):
                 if (ledstrip_type == "rgb"):
-                    if (fadeCount == 0):
+                    if (fadeCount[0] == 0):
                         colorToSet = determine_pwm(color0[0])
                     elif (fadeCount == 1):
                         colorToSet = determine_pwm("#000000")
                     set_pwm(*colorToSet)
-                    fadeCount = (fadeCount + 1) % 2
+                    fadeCount[0] = (fadeCount[0] + 1) % 2
                 elif (ledstrip_type == "monochrome"):
-                    if (fadeCount == 0):
+                    if (fadeCount[0] == 0):
                         colorToSet = determine_monochrome_pwm(intensity[0])
-                    elif (fadeCount == 1):
+                    elif (fadeCount[0] == 1):
                         colorToSet = determine_monochrome_pwm(0)
                     set_pwm(*colorToSet)
-                    fadeCount = (fadeCount + 1) % 2
+                    fadeCount[0] = (fadeCount[0] + 1) % 2
                 sleep(fadeDelay)
 
 animation_thread = threading.Thread(target=animation_handler)
