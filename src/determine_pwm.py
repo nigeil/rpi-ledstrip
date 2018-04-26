@@ -8,7 +8,7 @@ def determine_pwm(hexColor):
     duty = colors.hex2color(hexColor)
 
     # Perform lightness correction
-    duty = [cie1931(100 * d) for d in duty]
+    duty = [cie1931(d) for d in duty]
 
     # Put into range [0,max_duty] and change to int
     max_duty = 2000
