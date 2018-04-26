@@ -10,9 +10,9 @@ import time
 import threading
 
 try:
-    from RPI import PWM
+    import pigpio
 except ImportError:
-    import dummy_rpi_gpio as PWM
+    import dummy_rpi_gpio as pigpio
 
 # src code imports
 from determine_pwm import determine_pwm
@@ -63,12 +63,12 @@ MQTTcapath = config["MQTT"]["MQTTcapath"]
 ## which are defined globally
 if (ledstrip_type == "rgb"):
     def set_pwm(r_duty, g_duty, b_duty):
-        pi.set_servo(RED_PIN, r_duty)
-        pi.set_servo(GREEN_PIN, g_duty)
-        pi.set_servo(BLUE_PIN, b_duty)
+        pi.set_PWM_dutycycle(RED_PIN, r_duty)
+        pi.set_PWM_dutycycle(GREEN_PIN, g_duty)
+        pi.set_PWM_dutycycle(BLUE_PIN, b_duty)
 elif (ledstrip_type == "monochrome"):
     def set_pwm(led_duty):
-        pi.set_servo(LED_PIN, led_duty)
+        pi.set_PWM_dutycycle(LED_PIN, led_duty)
         return 0
 
 
@@ -144,7 +144,15 @@ def on_message(client, userdata, msg):
 
 # RPI setup
 ## Open up the RPI GPIO ports for writing, default to OFF (0,0,0)
-pi = PWM.Servo()
+pi = pigpio.pi()
+PWM_levels = 2000
+if (ledstrip_type == "rgb"):
+    pi.set_PWM_range(RED_PIN, PWM_levels)
+    pi.set_PWM_range(GREEN_PIN, PWM_levels)
+    pi.set_PWM_range(BLUE_PIN, PWM_levels)
+elif (ledstrip_type == "monochrome"):
+    pi.set_PWM_range(LED_PIN, PWM_levels)
+
 #set_pwm(0,0,0) 
 
 

@@ -11,7 +11,7 @@ def determine_pwm(hexColor):
     duty = [cie1931(100 * d) for d in duty]
 
     # Put into range [0,max_duty] and change to int
-    max_duty = 2000 # 20ms default cycle time, and 10us increments so 2000 levels
-    duty = [int(d * max_duty) * 10 for d in duty]
+    max_duty = 2000
+    duty = [int(d * max_duty) for d in duty]
 
     return duty

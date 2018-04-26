@@ -9,6 +9,9 @@ class pi():
     def set_PWM_dutycycle(self, pin_number, duty_cycle):
         return 0
 
+    def set_PWM_range(self, pin_number, duty_cycle):
+        return 0
+
     def set_servo(self, pin_number, duty_cycle):
     	return 0
     
