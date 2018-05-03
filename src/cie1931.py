@@ -6,3 +6,10 @@ def cie1931(L):
         return (L/902.3)
     else:
         return ((L+16.0)/116.0)**3
+
+if __name__ == "__main__":
+	import numpy as np
+	x = np.linspace(0.0,1.0, 10)
+	y = [cie1931(a) for a in x]
+	for a,b in zip(x,y):
+		print((a,b))

@@ -145,7 +145,7 @@ def on_message(client, userdata, msg):
 # RPI setup
 ## Open up the RPI GPIO ports for writing, default to OFF (0,0,0)
 pi = pigpio.pi()
-PWM_levels = 2000
+PWM_levels = 2048
 if (ledstrip_type == "rgb"):
     pi.set_PWM_range(RED_PIN, PWM_levels)
     pi.set_PWM_range(GREEN_PIN, PWM_levels)

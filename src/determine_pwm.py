@@ -11,7 +11,7 @@ def determine_pwm(hexColor):
     duty = [cie1931(d) for d in duty]
 
     # Put into range [0,max_duty] and change to int
-    max_duty = 2000
+    max_duty = 2048
     duty = [int(d * max_duty) for d in duty]
 
     return duty
