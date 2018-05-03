@@ -198,7 +198,7 @@ def animation_handler():
                 set_pwm(*colorToSet)
             elif (ledstrip_type == "monochrome"):
                 colorToSet = determine_monochrome_pwm(0)
-                set_pwm(*colorToSet)
+                set_pwm(colorToSet)
             sleep(0.25)
 
         elif (state[0] in ["on", "ON", "On", "1"]):
@@ -219,7 +219,7 @@ def animation_handler():
                     if (intensity[0] != prevIntensity[0]):
                         colorToSet[0] = determine_monochrome_pwm(intensity[0])
                         prevIntensity[0] = intensity[0] 
-                        set_pwm(*colorToSet)
+                        set_pwm(colorToSet)
                 sleep(0.25)
             
             # normal fade from color0 --> color1
@@ -245,7 +245,7 @@ def animation_handler():
                         prevIntensity[0] = intensity[0]
                         fadeCount[0]  = 0
                         colorToSet = determine_monochrome_pwm(fadeColors[fadeCount[0]%len(fadeColors)])
-                        set_pwm(*colorToSet)
+                        set_pwm(colorToSet)
                         #print("[DEBUG] new pwm: " + str(colorToSet))
                         fadeCount[0] = (fadeCount[0] + 1)
                 sleep(fadeDelay)
@@ -264,7 +264,7 @@ def animation_handler():
                         colorToSet = determine_monochrome_pwm(intensity[0])
                     elif (fadeCount[0] == 1):
                         colorToSet = determine_monochrome_pwm(0)
-                    set_pwm(*colorToSet)
+                    set_pwm(colorToSet)
                     fadeCount[0] = (fadeCount[0] + 1) % 2
                 sleep(fadeDelay)
 
